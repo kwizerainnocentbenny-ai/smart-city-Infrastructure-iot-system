@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Control · Kigali Smart City</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+        }
+
+        body {
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #fff;
+            background: #0f172a;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(135deg,
+                    rgba(15, 23, 42, 0.82) 0%,
+                    rgba(20, 30, 50, 0.85) 50%,
+                    rgba(15, 23, 42, 0.88) 100%),
+                url('https://images.unsplash.com/photo-1577086664693-894d8405334a?q=80&w=2400&auto=format&fit=crop') center/cover fixed;
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(10, 18, 34, 0.92);
+            backdrop-filter: blur(20px);
+            padding: 20px 40px;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(59, 130, 246, 0.15);
+            border-bottom: 2px solid rgba(59, 130, 246, 0.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #93c5fd;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
+            padding: 10px 24px;
+            border-radius: 60px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 2px solid transparent;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-brand:hover {
+            color: white;
+            background: rgba(59, 130, 246, 0.25);
+            border-color: #60a5fa;
+            transform: translateX(-6px) scale(1.02);
+            box-shadow: 0 25px 40px -12px #2563eb, 0 0 0 2px rgba(96, 165, 250, 0.4);
+        }
+
+        .nav-brand i {
+            font-size: 2rem;
+            filter: drop-shadow(0 4px 12px #1e3a8a);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff, #b1d0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            text-shadow: 0 5px 25px rgba(59, 130, 246, 0.6);
+            letter-spacing: 0.5px;
+        }
+
+        .page-title i {
+            font-size: 2.5rem;
+            -webkit-text-fill-color: #60a5fa;
+            filter: drop-shadow(0 0 20px #3b82f6);
+        }
+
+        /* Backend status indicator in navbar */
+        .backend-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .backend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .backend-status.online .backend-dot {
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .backend-status.offline .backend-dot {
+            background: #ef4444;
+        }
+
+        .backend-status.connecting .backend-dot {
+            background: #fbbf24;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.3
+            }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 30px 60px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 45px;
+            position: relative;
+        }
+
+        .section-header::after {
+            content: '';
+            display: block;
+            width: 140px;
+            height: 5px;
+            background: linear-gradient(90deg, transparent, #3b82f6, #93c5fd, #3b82f6, transparent);
+            margin: 20px auto 0;
+            border-radius: 10px;
+            box-shadow: 0 0 30px #3b82f6, 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .section-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 5px 30px rgba(0, 0, 0, 0.8), 0 0 40px rgba(59, 130, 246, 0.7);
+            letter-spacing: 1px;
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: #e2e8f0;
+            text-shadow: 0 2px 15px black;
+            font-weight: 400;
+        }
+
+        .zones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .zone-card {
+            background: rgba(20, 30, 48, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            padding: 30px;
+            border: 2px solid rgba(59, 130, 246, 0.25);
+            box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Downtown card gets a special live indicator */
+        .zone-card.live-zone {
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .zone-card.live-zone::after {
+            content: '⚡ LIVE';
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #60a5fa;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
+
+        .zone-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.2), transparent);
+            transition: left 0.8s;
+        }
+
+        .zone-card:hover {
+            transform: translateY(-14px) scale(1.02);
+            border-color: #60a5fa;
+            box-shadow: 0 40px 70px -15px #1e3a8a, 0 0 0 3px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.4);
+            background: rgba(28, 40, 60, 0.85);
+        }
+
+        .zone-card:hover::before {
+            left: 100%;
+        }
+
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .zone-name {
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-shadow: 0 4px 15px black;
+        }
+
+        .zone-name i {
+            color: #fbbf24;
+            font-size: 2rem;
+            filter: drop-shadow(0 0 15px #f59e0b);
+        }
+
+        .zone-status {
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .status-active {
+            background: linear-gradient(145deg, #059669, #10b981);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .status-inactive {
+            background: linear-gradient(145deg, #4b5563, #6b7280);
+        }
+
+        .zone-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            padding: 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 30px -12px black;
+        }
+
+        .stat-item:hover {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: #93c5fd;
+            transform: scale(1.08) translateY(-6px);
+            box-shadow: 0 25px 40px -12px #2563eb, 0 0 0 2px rgba(147, 197, 253, 0.4);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 25px #3b82f6;
+        }
+
+        .brightness-control {
+            margin-bottom: 25px;
+        }
+
+        .brightness-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            color: #f1f5f9;
+            margin-bottom: 12px;
+        }
+
+        .brightness-slider {
+            width: 100%;
+            height: 10px;
+            border-radius: 30px;
+            background: rgba(30, 41, 59, 0.8);
+            -webkit-appearance: none;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+
+        .brightness-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(145deg, #3b82f6, #93c5fd);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 4px solid white;
+            box-shadow: 0 8px 30px #3b82f6, 0 0 0 3px rgba(255, 255, 255, 0.3);
+            transition: 0.2s;
+        }
+
+        .brightness-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            box-shadow: 0 12px 40px #60a5fa, 0 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .zone-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 15px 30px -10px black;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-toggle {
+            background: linear-gradient(145deg, #10b981, #34d399);
+            color: white;
+        }
+
+        .btn-toggle.off {
+            background: linear-gradient(145deg, #6b7280, #9ca3af);
+        }
+
+        .btn-toggle:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 40px -10px #059669, 0 0 0 3px #a7f3d0;
+        }
+
+        .btn-auto {
+            background: linear-gradient(145deg, #3b82f6, #60a5fa);
+            color: white;
+        }
+
+        .btn-auto.active-auto {
+            background: linear-gradient(145deg, #7c3aed, #a78bfa);
+        }
+
+        .btn-auto:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 40px -10px #1e3a8a, 0 0 0 3px #bfdbfe;
+        }
+
+        /* Disabled state while loading */
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .monitor-card {
+            background: rgba(20, 30, 48, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            border: 2px solid rgba(59, 130, 246, 0.25);
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            box-shadow: 0 30px 50px -20px black, 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        }
+
+        .monitor-card:hover {
+            transform: translateY(-16px) scale(1.02);
+            border-color: #60a5fa;
+            box-shadow: 0 45px 80px -15px #1e3a8a, 0 0 0 4px rgba(59, 130, 246, 0.4), 0 0 50px rgba(59, 130, 246, 0.3);
+        }
+
+        .monitor-image-container {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+        }
+
+        .monitor-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.8s;
+        }
+
+        .monitor-card:hover .monitor-image {
+            transform: scale(1.15);
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(59, 130, 246, 0.6);
+            color: white;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 20;
+            box-shadow: 0 10px 30px black;
+        }
+
+        .fullscreen-btn:hover {
+            background: #3b82f6;
+            border-color: white;
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 15px 40px #2563eb, 0 0 0 3px rgba(255, 255, 255, 0.4);
+        }
+
+        .fullscreen-btn i {
+            font-size: 1.5rem;
+        }
+
+        .monitor-info {
+            padding: 28px;
+        }
+
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .monitor-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(239, 68, 68, 0.3);
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: 1px solid #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .live-dot {
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulseLive 1.5s infinite;
+            box-shadow: 0 0 20px #ef4444;
+        }
+
+        @keyframes pulseLive {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+                box-shadow: 0 0 15px #ef4444;
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.4);
+                box-shadow: 0 0 30px #ef4444;
+            }
+        }
+
+        .monitor-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .metric-item {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            padding: 16px 8px;
+            border-radius: 24px;
+            text-align: center;
+            border: 1px solid #3b82f640;
+            transition: 0.3s;
+            box-shadow: 0 10px 25px -8px black;
+        }
+
+        .metric-item:hover {
+            background: #3b82f6b0;
+            transform: translateY(-10px) scale(1.05);
+            border-color: white;
+            box-shadow: 0 25px 40px -10px #1e3a8a, 0 0 0 2px rgba(255, 255, 255, 0.4);
+        }
+
+        .fullscreen-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 10000;
+            backdrop-filter: blur(30px);
+        }
+
+        .fullscreen-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeScale 0.3s ease;
+        }
+
+        @keyframes fadeScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .fullscreen-content {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+
+        .fullscreen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(10, 18, 34, 0.95);
+            border-bottom: 2px solid #3b82f6;
+            box-shadow: 0 15px 40px black;
+        }
+
+        .fullscreen-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .close-fullscreen {
+            background: rgba(239, 68, 68, 0.25);
+            border: 2px solid #ef4444;
+            color: #ef4444;
+            width: 55px;
+            height: 55px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1.6rem;
+            box-shadow: 0 10px 30px black;
+        }
+
+        .close-fullscreen:hover {
+            background: #ef4444;
+            color: white;
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 15px 40px #ef4444, 0 0 0 3px rgba(255, 255, 255, 0.4);
+        }
+
+        .fullscreen-image {
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 95px);
+            object-fit: contain;
+            background: #000;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .analytics-card {
+            background: rgba(20, 30, 48, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            padding: 32px;
+            border: 2px solid rgba(59, 130, 246, 0.25);
+            transition: 0.4s;
+            box-shadow: 0 30px 50px -20px black;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-16px) scale(1.02);
+            border-color: #60a5fa;
+            box-shadow: 0 45px 80px -15px #1e3a8a, 0 0 0 4px rgba(59, 130, 246, 0.4);
+            background: rgba(30, 42, 65, 0.85);
+        }
+
+        .analytics-header {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .analytics-icon {
+            width: 75px;
+            height: 75px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            transition: 0.4s;
+            box-shadow: 0 20px 40px -8px black;
+            flex-shrink: 0;
+        }
+
+        .analytics-card:hover .analytics-icon {
+            transform: rotate(12deg) scale(1.15);
+        }
+
+        .icon-energy {
+            background: linear-gradient(145deg, #f97316, #fbbf24);
+        }
+
+        .icon-cost {
+            background: linear-gradient(145deg, #10b981, #34d399);
+        }
+
+        .icon-efficiency {
+            background: linear-gradient(145deg, #3b82f6, #60a5fa);
+        }
+
+        .icon-carbon {
+            background: linear-gradient(145deg, #22c55e, #4ade80);
+        }
+
+        .analytics-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            text-shadow: 0 0 25px #3b82f6;
+        }
+
+        .analytics-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 700;
+            margin-top: 10px;
+            border: 1px solid;
+        }
+
+        .change-positive {
+            background: #05966960;
+            color: #86efac;
+            border-color: #10b981;
+        }
+
+        .change-negative {
+            background: #b91c1c60;
+            color: #fecaca;
+            border-color: #ef4444;
+        }
+
+        .chart-container {
+            background: rgba(20, 30, 48, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 40px;
+            border: 2px solid rgba(59, 130, 246, 0.25);
+            transition: 0.4s;
+            box-shadow: 0 30px 50px -20px black;
+        }
+
+        .chart-container:hover {
+            border-color: #60a5fa;
+            box-shadow: 0 45px 80px -15px #1e3a8a, 0 0 0 4px rgba(59, 130, 246, 0.4);
+            transform: translateY(-12px);
+        }
+
+        .chart-canvas-container {
+            height: 400px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 15px;
+                gap: 10px;
+            }
+
+            .page-title {
+                font-size: 1.6rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .fullscreen-header {
+                padding: 15px 20px;
+            }
+
+            .fullscreen-title {
+                font-size: 1.2rem;
+            }
+
+            .backend-status span {
+                display: none;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="smart_city_dashboard.html" class="nav-brand">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Dashboard</span>
+        </a>
+        <div class="page-title">
+            <i class="fas fa-cog"></i>
+            <span>Auto Control · Kigali</span>
+        </div>
+        <div class="backend-status connecting" id="backendStatus">
+            <div class="backend-dot"></div>
+            <span id="backendStatusText">Connecting…</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Lighting Section -->
+        <section class="lighting-section">
+            <div class="section-header">
+                <h2 class="section-title">⚡ Smart Street Lighting</h2>
+                <p class="section-subtitle">Zone-based dimming · adaptive control · real-time feedback</p>
+            </div>
+            <div class="zones-grid" id="zonesGrid"></div>
+        </section>
+
+        <!-- Live Monitoring -->
+        <section class="monitoring-section">
+            <div class="section-header">
+                <h2 class="section-title">📹 Live Monitoring · Fullscreen</h2>
+                <p class="section-subtitle">Click fullscreen button for immersive view</p>
+            </div>
+            <div class="monitoring-grid" id="monitoringGrid"></div>
+        </section>
+
+        <!-- Analytics -->
+        <section class="analytics-section">
+            <div class="section-header">
+                <h2 class="section-title">📊 City Analytics</h2>
+                <p class="section-subtitle">Performance · savings · environmental impact</p>
+            </div>
+            <div class="analytics-grid" id="analyticsGrid"></div>
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">⚡ Weekly Energy Consumption</h3>
+                    <p class="chart-subtitle">Last 7 days · all zones (kW)</p>
+                </div>
+                <div class="chart-canvas-container">
+                    <canvas id="energyChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Fullscreen Modal -->
+    <div class="fullscreen-modal" id="fullscreenModal">
+        <div class="fullscreen-content">
+            <div class="fullscreen-header">
+                <div class="fullscreen-title">
+                    <div class="live-indicator"><span class="live-dot"></span> LIVE</div>
+                    <span id="fullscreenAreaName">Downtown</span>
+                </div>
+                <button class="close-fullscreen" onclick="closeFullscreen()"><i class="fas fa-times"></i></button>
+            </div>
+            <img id="fullscreenImage" class="fullscreen-image" src="" alt="">
+        </div>
+    </div>
+
+    <script>
+        (function () {
+
+            // ========== CONFIG ==========
+            const API = 'http://localhost:8001/api';
+            const LIVE_ZONE_ID = 1;   // Downtown = zone id 1 in DB
+            const POLL_INTERVAL = 5000;
+
+            // ========== ZONE DATA (simulated except Downtown) ==========
+            const zones = [
+                { name: 'Downtown', icon: 'fa-city', lights: 124, basePower: 8.4, bright: 85, active: true, live: true },
+                { name: 'Industrial', icon: 'fa-industry', lights: 89, basePower: 6.2, bright: 70, active: true, live: false },
+                { name: 'Residential', icon: 'fa-home', lights: 156, basePower: 9.8, bright: 60, active: true, live: false },
+                { name: 'Highway', icon: 'fa-road', lights: 78, basePower: 5.6, bright: 90, active: true, live: false },
+                { name: 'Park Area', icon: 'fa-tree', lights: 0, basePower: 0, bright: 0, active: false, live: false },
+                { name: 'Commercial', icon: 'fa-shopping-cart', lights: 112, basePower: 7.9, bright: 80, active: true, live: false }
+            ];
+
+            // Local state mirror for Downtown (zone index 0)
+            const downtown = {
+                active: true,
+                brightness: 85,
+                mode: 'manual'
+            };
+
+            // ========== BACKEND STATUS ==========
+            const statusEl = document.getElementById('backendStatus');
+            const statusTextEl = document.getElementById('backendStatusText');
+
+            function setBackendStatus(state) {
+                statusEl.className = 'backend-status ' + state;
+                statusTextEl.textContent = state === 'online' ? 'Backend Online'
+                    : state === 'offline' ? 'Backend Offline'
+                        : 'Connecting…';
+            }
+
+            // ========== RENDER ZONES ==========
+            const zonesGrid = document.getElementById('zonesGrid');
+
+            zones.forEach((z, index) => {
+                const powerDisplay = z.active ? (z.basePower * z.bright / 100).toFixed(1) : '0.0';
+                const card = document.createElement('div');
+                card.className = 'zone-card' + (z.live ? ' live-zone' : '');
+                card.dataset.index = index;
+
+                card.innerHTML = `
+                <div class="zone-header">
+                    <div class="zone-name"><i class="fas ${z.icon}"></i>${z.name}</div>
+                    <div class="zone-status ${z.active ? 'status-active' : 'status-inactive'}">${z.active ? 'Active' : 'Inactive'}</div>
+                </div>
+                <div class="zone-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Active Lights</div>
+                        <div class="stat-value lights-val">${z.active ? z.lights : 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Power Usage</div>
+                        <div class="stat-value power-val">${powerDisplay}kW</div>
+                    </div>
+                </div>
+                <div class="brightness-control">
+                    <div class="brightness-label">
+                        <span>Brightness</span>
+                        <span class="brightness-value">${z.bright}%</span>
+                    </div>
+                    <input type="range" class="brightness-slider" min="0" max="100" value="${z.bright}">
+                </div>
+                <div class="zone-controls">
+                    <button class="control-btn btn-toggle${!z.active ? ' off' : ''}">
+                        <i class="fas fa-power-off"></i>
+                        <span class="toggle-label">${z.active ? 'Turn Off' : 'Turn On'}</span>
+                    </button>
+                    <button class="control-btn btn-auto">
+                        <i class="fas fa-magic"></i>
+                        <span class="auto-label">Auto</span>
+                    </button>
+                </div>
+            `;
+                zonesGrid.appendChild(card);
+            });
+
+            // ========== DOWNTOWN CARD HELPERS ==========
+            function getDowntownCard() {
+                return zonesGrid.querySelectorAll('.zone-card')[0];
+            }
+
+            function setDowntownCardUI(active, brightness, mode) {
+                const card = getDowntownCard();
+                if (!card) return;
+
+                const statusEl = card.querySelector('.zone-status');
+                const powerEl = card.querySelector('.power-val');
+                const lightsEl = card.querySelector('.lights-val');
+                const slider = card.querySelector('.brightness-slider');
+                const brightLbl = card.querySelector('.brightness-value');
+                const toggleBtn = card.querySelector('.btn-toggle');
+                const autoBtn = card.querySelector('.btn-auto');
+
+                // Status badge
+                statusEl.className = `zone-status ${active ? 'status-active' : 'status-inactive'}`;
+                statusEl.textContent = active ? 'Active' : 'Inactive';
+
+                // Toggle button appearance
+                toggleBtn.innerHTML = `<i class="fas fa-power-off"></i><span class="toggle-label">${active ? 'Turn Off' : 'Turn On'}</span>`;
+                if (active) {
+                    toggleBtn.classList.remove('off');
+                } else {
+                    toggleBtn.classList.add('off');
+                }
+
+                // Auto button highlight
+                if (mode === 'auto') {
+                    autoBtn.classList.add('active-auto');
+                    autoBtn.innerHTML = `<i class="fas fa-magic"></i><span class="auto-label">Auto ✓</span>`;
+                } else {
+                    autoBtn.classList.remove('active-auto');
+                    autoBtn.innerHTML = `<i class="fas fa-magic"></i><span class="auto-label">Auto</span>`;
+                }
+
+                // Power & lights
+                const basePower = zones[0].basePower;
+                powerEl.textContent = active ? (basePower * brightness / 100).toFixed(1) + 'kW' : '0.0kW';
+                lightsEl.textContent = active ? zones[0].lights : 0;
+
+                // Slider & label
+                slider.value = brightness;
+                brightLbl.textContent = brightness + '%';
+            }
+
+            // ========== NOTIFICATIONS ==========
+            function showNotif(msg, type = 'info') {
+                const colors = {
+                    success: 'linear-gradient(145deg,#059669,#10b981)',
+                    error: 'linear-gradient(145deg,#dc2626,#ef4444)',
+                    info: 'linear-gradient(145deg,#2563eb,#3b82f6)',
+                    warning: 'linear-gradient(145deg,#d97706,#fbbf24)',
+                };
+                const notif = document.createElement('div');
+                notif.style.cssText = `
+                position:fixed; top:100px; right:30px;
+                background:${colors[type] || colors.info};
+                color:white; padding:16px 32px; border-radius:60px;
+                font-weight:600; font-size:1rem;
+                box-shadow:0 20px 50px black; border:2px solid rgba(255,255,255,0.3);
+                z-index:10001; animation:slideIn 0.3s; max-width:360px;
+            `;
+                notif.textContent = msg;
+                document.body.appendChild(notif);
+                setTimeout(() => {
+                    notif.style.animation = 'slideIn 0.3s reverse';
+                    setTimeout(() => notif.remove(), 300);
+                }, 2800);
+            }
+
+            // ========== BACKEND API CALLS ==========
+
+            // Fetch current Downtown zone state from backend
+            async function fetchDowntownState() {
+                try {
+                    const res = await fetch(`${API}/lighting/zones/${LIVE_ZONE_ID}`, {
+                        signal: AbortSignal.timeout(4000)
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                    const zone = await res.json();
+                    setBackendStatus('online');
+
+                    // Sync local state
+                    const backendActive = zone.current_state === 'ON';
+                    const backendBright = parseInt(zone.brightness) || 0;
+                    const backendMode = zone.mode || 'manual';
+
+                    // Only update UI if backend differs from our local state
+                    // (prevents fighting with in-progress user actions)
+                    if (backendActive !== downtown.active ||
+                        backendBright !== downtown.brightness ||
+                        backendMode !== downtown.mode) {
+
+                        downtown.active = backendActive;
+                        downtown.brightness = backendBright;
+                        downtown.mode = backendMode;
+                        setDowntownCardUI(backendActive, backendBright, backendMode);
+                    }
+
+                } catch (err) {
+                    setBackendStatus('offline');
+                    // Don't log spam, just silently fail
+                }
+            }
+
+            // Send control command to backend (optimistic — UI already updated)
+            async function sendControlCommand(state, brightness) {
+                try {
+                    const res = await fetch(`${API}/lighting/zones/${LIVE_ZONE_ID}/control`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ state, brightness }),
+                        signal: AbortSignal.timeout(4000)
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    setBackendStatus('online');
+                    return true;
+                } catch (err) {
+                    setBackendStatus('offline');
+                    console.warn('Backend send failed:', err.message);
+                    return false;
+                }
+            }
+
+            // Send mode command to backend
+            async function sendModeCommand(mode) {
+                try {
+                    const res = await fetch(`${API}/lighting/zones/${LIVE_ZONE_ID}/mode`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ mode }),
+                        signal: AbortSignal.timeout(4000)
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    setBackendStatus('online');
+                    return true;
+                } catch (err) {
+                    setBackendStatus('offline');
+                    return false;
+                }
+            }
+
+            // ========== TOGGLE HANDLER for Downtown ==========
+            async function toggleDowntown() {
+                const newActive = !downtown.active;
+                const newState = newActive ? 'ON' : 'OFF';
+
+                // Optimistic update — instant UI response
+                downtown.active = newActive;
+                downtown.mode = 'manual';   // manual action exits auto mode
+                setDowntownCardUI(newActive, downtown.brightness, 'manual');
+                showNotif(newActive ? '💡 Downtown lights ON' : '🌑 Downtown lights OFF',
+                    newActive ? 'success' : 'warning');
+
+                // Fire backend in background
+                await sendControlCommand(newState, downtown.brightness);
+                if (downtown.mode === 'auto') {
+                    // reset auto UI if it was auto
+                    await sendModeCommand('manual');
+                }
+            }
+
+            // ========== AUTO MODE HANDLER for Downtown ==========
+            async function setDowntownAutoMode() {
+                downtown.mode = 'auto';
+                setDowntownCardUI(downtown.active, downtown.brightness, 'auto');
+                showNotif('🤖 Auto mode engaged — lights follow schedule', 'info');
+
+                await sendModeCommand('auto');
+            }
+
+            // ========== BRIGHTNESS HANDLER for Downtown ==========
+            async function setDowntownBrightness(value) {
+                downtown.brightness = value;
+                // Update just the power display + label (slider already moved visually)
+                const card = getDowntownCard();
+                const powerEl = card.querySelector('.power-val');
+                const brightLbl = card.querySelector('.brightness-value');
+                brightLbl.textContent = value + '%';
+                powerEl.textContent = downtown.active
+                    ? (zones[0].basePower * value / 100).toFixed(1) + 'kW'
+                    : '0.0kW';
+
+                if (downtown.active) {
+                    await sendControlCommand('ON', value);
+                    showNotif(`🔆 Brightness set to ${value}%`, 'info');
+                } else {
+                    showNotif(`🔆 Brightness saved: ${value}% (zone inactive)`, 'warning');
+                }
+            }
+
+            // ========== WIRE UP ZONE CONTROLS ==========
+            zonesGrid.querySelectorAll('.zone-card').forEach((card, index) => {
+                const toggleBtn = card.querySelector('.btn-toggle');
+                const autoBtn = card.querySelector('.btn-auto');
+                const slider = card.querySelector('.brightness-slider');
+                const brightLbl = card.querySelector('.brightness-value');
+
+                if (index === 0) {
+                    // ─── DOWNTOWN (live backend zone) ───────────────────────
+                    toggleBtn.addEventListener('click', () => toggleDowntown());
+                    autoBtn.addEventListener('click', () => setDowntownAutoMode());
+
+                    // Instant label update while dragging
+                    slider.addEventListener('input', () => {
+                        brightLbl.textContent = slider.value + '%';
+                        // Also update power live
+                        const powerEl = card.querySelector('.power-val');
+                        powerEl.textContent = downtown.active
+                            ? (zones[0].basePower * parseInt(slider.value) / 100).toFixed(1) + 'kW'
+                            : '0.0kW';
+                    });
+
+                    // Send to backend on release
+                    slider.addEventListener('change', () => {
+                        setDowntownBrightness(parseInt(slider.value));
+                    });
+
+                } else {
+                    // ─── SIMULATED ZONES ────────────────────────────────────
+                    toggleBtn.addEventListener('click', function () {
+                        const statusEl = card.querySelector('.zone-status');
+                        const isActive = statusEl.classList.contains('status-active');
+                        const newActive = !isActive;
+                        const zoneData = zones[index];
+
+                        statusEl.className = `zone-status ${newActive ? 'status-active' : 'status-inactive'}`;
+                        statusEl.textContent = newActive ? 'Active' : 'Inactive';
+                        toggleBtn.innerHTML = `<i class="fas fa-power-off"></i><span class="toggle-label">${newActive ? 'Turn Off' : 'Turn On'}</span>`;
+                        if (newActive) toggleBtn.classList.remove('off');
+                        else toggleBtn.classList.add('off');
+
+                        const powerEl = card.querySelector('.power-val');
+                        const lightsEl = card.querySelector('.lights-val');
+                        const bright = parseInt(slider.value);
+                        powerEl.textContent = newActive ? (zoneData.basePower * bright / 100).toFixed(1) + 'kW' : '0.0kW';
+                        lightsEl.textContent = newActive ? zoneData.lights : 0;
+                        showNotif(newActive ? `✅ ${zoneData.name} ON` : `⛔ ${zoneData.name} OFF`,
+                            newActive ? 'success' : 'warning');
+                    });
+
+                    autoBtn.addEventListener('click', () => {
+                        showNotif(`🤖 ${zones[index].name} auto mode`, 'info');
+                    });
+
+                    slider.addEventListener('input', () => {
+                        brightLbl.textContent = slider.value + '%';
+                        const statusEl = card.querySelector('.zone-status');
+                        if (statusEl.classList.contains('status-active')) {
+                            const powerEl = card.querySelector('.power-val');
+                            powerEl.textContent = (zones[index].basePower * parseInt(slider.value) / 100).toFixed(1) + 'kW';
+                        }
+                    });
+
+                    slider.addEventListener('change', () => {
+                        showNotif(`🔆 ${zones[index].name} brightness: ${slider.value}%`, 'info');
+                    });
+                }
+            });
+
+            // ========== INITIAL FETCH + POLLING ==========
+            // Immediately fetch Downtown state from backend
+            fetchDowntownState();
+            // Poll every 5 seconds for live sync
+            setInterval(fetchDowntownState, POLL_INTERVAL);
+
+            // ========== RENDER MONITORS ==========
+            const monitors = [
+                { area: 'Downtown Intersection', img: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=800', vehicles: 342, pedestrians: 128, alerts: 0 },
+                { area: 'Central Park', img: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=800', vehicles: 45, pedestrians: 89, alerts: 0 },
+                { area: 'Commercial District', img: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800', vehicles: 278, pedestrians: 456, alerts: 1 },
+                { area: 'Highway Junction', img: 'https://images.unsplash.com/photo-1465447142348-e9952c393450?q=80&w=800', vehicles: 523, pedestrians: 12, alerts: 0 }
+            ];
+
+            const monitoringGrid = document.getElementById('monitoringGrid');
+            monitors.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'monitor-card';
+                card.innerHTML = `
+                <div class="monitor-image-container">
+                    <img src="${m.img}" alt="${m.area}" class="monitor-image">
+                    <button class="fullscreen-btn"><i class="fas fa-expand"></i></button>
+                </div>
+                <div class="monitor-info">
+                    <div class="monitor-header">
+                        <div class="monitor-title"><i class="fas fa-video" style="color:#60a5fa;"></i>${m.area}</div>
+                        <div class="live-indicator"><span class="live-dot"></span><span>LIVE</span></div>
+                    </div>
+                    <div class="monitor-metrics">
+                        <div class="metric-item"><div class="metric-icon">🚗</div><div class="metric-value">${m.vehicles}</div><div class="metric-label">Vehicles</div></div>
+                        <div class="metric-item"><div class="metric-icon">🚶</div><div class="metric-value">${m.pedestrians}</div><div class="metric-label">Pedestrians</div></div>
+                        <div class="metric-item"><div class="metric-icon">⚠️</div><div class="metric-value">${m.alerts}</div><div class="metric-label">Alerts</div></div>
+                    </div>
+                </div>
+            `;
+                monitoringGrid.appendChild(card);
+            });
+
+            // ========== FULLSCREEN LOGIC ==========
+            const modal = document.getElementById('fullscreenModal');
+            const fsImage = document.getElementById('fullscreenImage');
+            const fsTitle = document.getElementById('fullscreenAreaName');
+
+            window.openFullscreen = (btn) => {
+                const card = btn.closest('.monitor-card');
+                const img = card.querySelector('.monitor-image').src;
+                const title = card.querySelector('.monitor-title').innerText;
+                fsImage.src = img;
+                fsTitle.innerText = title;
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            };
+
+            window.closeFullscreen = () => {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                fsImage.src = '';
+            };
+
+            document.querySelectorAll('.fullscreen-btn').forEach(btn => {
+                btn.addEventListener('click', e => { e.stopPropagation(); openFullscreen(btn); });
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && modal.classList.contains('active')) closeFullscreen();
+            });
+
+            // ========== RENDER ANALYTICS ==========
+            const analytics = [
+                { title: 'Energy', value: '37.9 kW', change: '-12%', type: 'negative', icon: 'fa-bolt', iconClass: 'icon-energy' },
+                { title: 'Monthly Savings', value: '$4,250', change: '+18%', type: 'positive', icon: 'fa-dollar-sign', iconClass: 'icon-cost' },
+                { title: 'Efficiency', value: '94.5%', change: '+3%', type: 'positive', icon: 'fa-gauge-high', iconClass: 'icon-efficiency' },
+                { title: 'CO₂ Reduction', value: '2.8t', change: '+15%', type: 'positive', icon: 'fa-leaf', iconClass: 'icon-carbon' }
+            ];
+
+            const analyticsGrid = document.getElementById('analyticsGrid');
+            analytics.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'analytics-card';
+                card.innerHTML = `
+                <div class="analytics-header">
+                    <div class="analytics-icon ${a.iconClass}"><i class="fas ${a.icon}"></i></div>
+                    <div class="analytics-content">
+                        <div class="analytics-title">${a.title}</div>
+                        <div class="analytics-value">${a.value}</div>
+                        <div class="analytics-change change-${a.type}">
+                            <i class="fas fa-arrow-${a.type === 'positive' ? 'up' : 'down'}"></i>${a.change}
+                        </div>
+                    </div>
+                </div>
+            `;
+                analyticsGrid.appendChild(card);
+            });
+
+            // ========== CHART.JS ==========
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'kW',
+                        data: [32.5, 38.2, 42.8, 36.4, 45.2, 28.6, 24.8],
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderRadius: 12,
+                        hoverBackgroundColor: '#93c5fd',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#cbd5e1', font: { size: 14 } } },
+                        tooltip: { backgroundColor: '#0f172a', titleColor: '#60a5fa' }
+                    },
+                    scales: {
+                        y: { grid: { color: '#3b82f620' }, ticks: { color: '#94a3b8' } },
+                        x: { ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // ========== LIVE MONITOR METRICS SIMULATION ==========
+            setInterval(() => {
+                document.querySelectorAll('.monitor-card .metric-value').forEach(el => {
+                    let val = parseInt(el.textContent);
+                    if (!isNaN(val)) {
+                        val += Math.floor(Math.random() * 6) - 2;
+                        el.textContent = Math.max(0, val);
+                    }
+                });
+            }, 6000);
+
+        })();
+    </script>
+</body>
+
+</html>
