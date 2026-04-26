@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kigali Complete Guide · 80+ Locations</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Routing Machine -->
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0b1120;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-home-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 16px 30px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .brand i {
+            color: #3b82f6;
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 10px #3b82f6);
+        }
+
+        .home-btn {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px;
+            padding: 12px 32px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.7);
+        }
+
+        .main-content {
+            max-width: 1800px;
+            margin: 30px auto;
+            padding: 0 30px;
+            width: 100%;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .page-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .page-title i {
+            color: #3b82f6;
+            font-size: 3rem;
+            filter: drop-shadow(0 0 15px #3b82f6);
+            animation: float 3s infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .live-location-badge {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            border: 2px solid #3b82f660;
+            border-radius: 60px;
+            padding: 15px 30px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .live-location-badge:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .live-location-badge i {
+            color: #4ade80;
+            font-size: 1.3rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .nearest-recommendation {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.3));
+            backdrop-filter: blur(10px);
+            border: 2px solid #3b82f6;
+            border-radius: 20px;
+            padding: 18px 30px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .nearest-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.2rem;
+        }
+
+        .nearest-info i {
+            color: #fbbf24;
+            font-size: 2rem;
+        }
+
+        .nearest-badge {
+            background: #3b82f6;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .nearest-name {
+            font-weight: 700;
+            color: #fbbf24;
+            font-size: 1.3rem;
+        }
+
+        .nearest-category {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 3px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .nearest-action {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nearest-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #3b82f6;
+            border-radius: 40px;
+            padding: 10px 25px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nearest-btn:hover {
+            background: #3b82f6;
+            transform: translateY(-3px);
+        }
+
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .category-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 12px 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 0 0 auto;
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.25);
+        }
+
+        .category-card.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.35);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        .category-icon {
+            font-size: 1.3rem;
+        }
+
+        .category-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .category-count {
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-left: 5px;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .search-input-group {
+            flex: 2;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input-group i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #3b82f6;
+            font-size: 1.1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 14px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        .radius-control {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 14px;
+            padding: 0 20px;
+        }
+
+        .radius-control i {
+            color: #3b82f6;
+        }
+
+        .radius-slider {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 10px;
+        }
+
+        .radius-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            border: 3px solid #3b82f6;
+            cursor: pointer;
+        }
+
+        .radius-value {
+            color: white;
+            font-weight: 700;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .sort-control {
+            flex: 0.5;
+            min-width: 150px;
+        }
+
+        .sort-select {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 14px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .sort-select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0 25px;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 18px 25px;
+            border-radius: 60px;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .results-title {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .results-count {
+            background: rgba(59, 130, 246, 0.25);
+            padding: 8px 22px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .spots-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin: 30px 0;
+        }
+
+        .spot-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 2px solid rgba(59, 130, 246, 0.25);
+            border-radius: 28px;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .spot-card:hover {
+            transform: translateY(-8px);
+            border-color: #3b82f6;
+            box-shadow: 0 30px 50px rgba(59, 130, 246, 0.3);
+        }
+
+        .spot-card.nearest {
+            border: 3px solid #fbbf24;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+        }
+
+        .spot-card.nearest::before {
+            content: '⭐ NEAREST';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #f59e0b;
+            color: black;
+            font-weight: 800;
+            font-size: 0.7rem;
+            padding: 4px 12px;
+            border-radius: 30px;
+            z-index: 10;
+            border: 2px solid white;
+        }
+
+        .spot-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-bottom: 2px solid #3b82f660;
+            background-color: #1e293b;
+        }
+
+        .spot-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .spot-content {
+            padding: 20px 18px;
+            color: white;
+            position: relative;
+        }
+
+        .spot-icon {
+            position: absolute;
+            top: -25px;
+            right: 15px;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 10px 20px #3b82f680;
+            border: 2px solid white;
+        }
+
+        .spot-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            padding-right: 40px;
+        }
+
+        .spot-category {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.25);
+            padding: 4px 12px;
+            border-radius: 30px;
+            color: #93c5fd;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .spot-desc {
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .spot-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .distance-badge {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 14px;
+            border-radius: 30px;
+            color: white;
+            font-weight: 700;
+            border: 2px solid #3b82f6;
+            font-size: 0.8rem;
+        }
+
+        .distance-badge i {
+            color: #3b82f6;
+            margin-right: 5px;
+        }
+
+        .transport-mini {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            flex-wrap: wrap;
+        }
+
+        .transport-mini span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        .transport-mini i {
+            color: #3b82f6;
+        }
+
+        .transport-mini .moto i {
+            color: #f59e0b;
+        }
+
+        .transport-mini .bus i {
+            color: #10b981;
+        }
+
+        .card-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .card-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .map-section {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 25px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            margin: 30px 0;
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .map-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .map-title i {
+            color: #3b82f6;
+        }
+
+        #kigaliMap {
+            height: 480px;
+            width: 100%;
+            border-radius: 24px;
+            border: 3px solid #3b82f660;
+        }
+
+        .route-stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-bubble {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border: 2px solid #3b82f6;
+            border-radius: 60px;
+            padding: 12px 25px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .stat-bubble i {
+            color: #3b82f6;
+        }
+
+        .leaflet-routing-container {
+            display: none;
+        }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            color: white;
+            border-radius: 20px;
+            border: 2px solid #3b82f6;
+        }
+
+        .custom-popup .leaflet-popup-tip {
+            background: #3b82f6;
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1400px) {
+            .spots-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .spots-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .spots-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                padding: 0 15px;
+            }
+
+            .page-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <div class="top-home-bar">
+            <div class="brand">
+                <i class="fas fa-city"></i>
+                <span>Kigali · Complete City Guide</span>
+            </div>
+            <a href="smart_city_dashboard.html" class="home-btn">
+                <i class="fas fa-home"></i> <span>Home</span>
+            </a>
+        </div>
+
+        <div class="main-content">
+            <div class="page-header">
+                <div class="page-title">
+                    <i class="fas fa-location-dot"></i>
+                    <span>Find Everything Near You</span>
+                </div>
+                <div class="live-location-badge" onclick="detectUserLocation()">
+                    <i class="fas fa-location-dot" id="locIcon"></i>
+                    <span id="locationText">Detecting...</span>
+                </div>
+            </div>
+
+            <div class="nearest-recommendation" id="nearestBanner" style="display: none;">
+                <div class="nearest-info">
+                    <i class="fas fa-crown"></i>
+                    <div>
+                        <span class="nearest-badge" id="nearestCategoryLabel">NEAREST</span>
+                        <div>
+                            <span class="nearest-name" id="nearestName"></span>
+                            <span class="nearest-category" id="nearestCategory"></span>
+                            <span id="nearestDist"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="nearest-action">
+                    <button class="nearest-btn" id="nearestDirectionsBtn">
+                        <i class="fas fa-diamond-turn-right"></i> Directions
+                    </button>
+                    <button class="nearest-btn" onclick="scrollToNearest()">
+                        <i class="fas fa-arrow-down"></i> Show
+                    </button>
+                </div>
+            </div>
+
+            <div class="category-filters" id="categoryFilters">
+                <div class="category-card active" data-cat="all" onclick="filterCategory('all', this)">
+                    <span class="category-icon">📍</span>
+                    <span class="category-name">All Places</span>
+                    <span class="category-count" id="countAll">82</span>
+                </div>
+                <div class="category-card" data-cat="hospital" onclick="filterCategory('hospital', this)">
+                    <span class="category-icon">🏥</span>
+                    <span class="category-name">Hospitals</span>
+                    <span class="category-count" id="countHospital">8</span>
+                </div>
+                <div class="category-card" data-cat="clinic" onclick="filterCategory('clinic', this)">
+                    <span class="category-icon">💊</span>
+                    <span class="category-name">Clinics</span>
+                    <span class="category-count" id="countClinic">6</span>
+                </div>
+                <div class="category-card" data-cat="pharmacy" onclick="filterCategory('pharmacy', this)">
+                    <span class="category-icon">⚕️</span>
+                    <span class="category-name">Pharmacies</span>
+                    <span class="category-count" id="countPharmacy">5</span>
+                </div>
+                <div class="category-card" data-cat="police" onclick="filterCategory('police', this)">
+                    <span class="category-icon">🚔</span>
+                    <span class="category-name">Police</span>
+                    <span class="category-count" id="countPolice">5</span>
+                </div>
+                <div class="category-card" data-cat="school" onclick="filterCategory('school', this)">
+                    <span class="category-icon">🏫</span>
+                    <span class="category-name">Schools</span>
+                    <span class="category-count" id="countSchool">6</span>
+                </div>
+                <div class="category-card" data-cat="university" onclick="filterCategory('university', this)">
+                    <span class="category-icon">🎓</span>
+                    <span class="category-name">Universities</span>
+                    <span class="category-count" id="countUniversity">3</span>
+                </div>
+                <div class="category-card" data-cat="hotel" onclick="filterCategory('hotel', this)">
+                    <span class="category-icon">🏨</span>
+                    <span class="category-name">Hotels</span>
+                    <span class="category-count" id="countHotel">5</span>
+                </div>
+                <div class="category-card" data-cat="market" onclick="filterCategory('market', this)">
+                    <span class="category-icon">🛒</span>
+                    <span class="category-name">Markets</span>
+                    <span class="category-count" id="countMarket">4</span>
+                </div>
+                <div class="category-card" data-cat="supermarket" onclick="filterCategory('supermarket', this)">
+                    <span class="category-icon">🏪</span>
+                    <span class="category-name">Supermarkets</span>
+                    <span class="category-count" id="countSupermarket">5</span>
+                </div>
+                <div class="category-card" data-cat="restaurant" onclick="filterCategory('restaurant', this)">
+                    <span class="category-icon">🍽️</span>
+                    <span class="category-name">Restaurants</span>
+                    <span class="category-count" id="countRestaurant">8</span>
+                </div>
+                <div class="category-card" data-cat="cafe" onclick="filterCategory('cafe', this)">
+                    <span class="category-icon">☕</span>
+                    <span class="category-name">Cafés</span>
+                    <span class="category-count" id="countCafe">5</span>
+                </div>
+                <div class="category-card" data-cat="bank" onclick="filterCategory('bank', this)">
+                    <span class="category-icon">🏦</span>
+                    <span class="category-name">Banks</span>
+                    <span class="category-count" id="countBank">6</span>
+                </div>
+                <div class="category-card" data-cat="atm" onclick="filterCategory('atm', this)">
+                    <span class="category-icon">💳</span>
+                    <span class="category-name">ATMs</span>
+                    <span class="category-count" id="countATM">5</span>
+                </div>
+                <div class="category-card" data-cat="fuel" onclick="filterCategory('fuel', this)">
+                    <span class="category-icon">⛽</span>
+                    <span class="category-name">Fuel</span>
+                    <span class="category-count" id="countFuel">4</span>
+                </div>
+                <div class="category-card" data-cat="park" onclick="filterCategory('park', this)">
+                    <span class="category-icon">🌳</span>
+                    <span class="category-name">Parks</span>
+                    <span class="category-count" id="countPark">4</span>
+                </div>
+                <div class="category-card" data-cat="gym" onclick="filterCategory('gym', this)">
+                    <span class="category-icon">💪</span>
+                    <span class="category-name">Gyms</span>
+                    <span class="category-count" id="countGym">3</span>
+                </div>
+            </div>
+
+            <div class="search-section">
+                <div class="search-input-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="search-input" id="searchInput"
+                        placeholder="Search hospitals, police, restaurants...">
+                </div>
+                <div class="radius-control">
+                    <i class="fas fa-circle-radiation"></i>
+                    <input type="range" class="radius-slider" id="radiusSlider" min="0.5" max="20" value="5" step="0.5">
+                    <span class="radius-value"><span id="radiusValue">5</span> km</span>
+                </div>
+                <div class="sort-control">
+                    <select class="sort-select" id="sortSelect">
+                        <option value="distance">Nearest first</option>
+                        <option value="name">Name A-Z</option>
+                        <option value="category">Category</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-header">
+                <div class="results-title">
+                    <i class="fas fa-map-pin"></i>
+                    <span>Places Near You</span>
+                </div>
+                <div class="results-count">
+                    <span id="resultsCount">82</span> places found
+                </div>
+            </div>
+
+            <div class="spots-grid" id="spotsGrid"></div>
+
+            <div class="map-section">
+                <div class="map-header">
+                    <div class="map-title">
+                        <i class="fas fa-map"></i>
+                        <span>Interactive Map</span>
+                    </div>
+                    <div class="route-panel" id="routeSummary">
+                        <i class="fas fa-route"></i> <span id="routeDist">Select a place</span>
+                    </div>
+                </div>
+                <div id="kigaliMap"></div>
+                <div class="route-stats">
+                    <div class="stat-bubble"><i class="fas fa-person-walking"></i> <span id="walkTime">—</span></div>
+                    <div class="stat-bubble"><i class="fas fa-car"></i> <span id="driveTime">—</span></div>
+                    <div class="stat-bubble"><i class="fas fa-taxi"></i> <span id="taxiFare">—</span></div>
+                    <div class="stat-bubble"><i class="fas fa-motorcycle"></i> <span id="motoFare">—</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 82+ REAL KIGALI LOCATIONS ====================
+        const cityLocations = [
+            // HOSPITALS (8)
+            { id: 1, name: 'CHUK - Kigali Teaching Hospital', category: 'hospital', desc: 'Main referral hospital · 24/7 emergency', lat: -1.9441, lng: 30.0619, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=CHUK+Hospital', address: 'KN 4 Ave, Kigali' },
+            { id: 2, name: 'King Faisal Hospital', category: 'hospital', desc: 'Private specialist hospital', lat: -1.9403, lng: 30.0891, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=King+Faisal', address: 'KG 544 St, Kigali' },
+            { id: 3, name: 'La Croix du Sud Hospital', category: 'hospital', desc: 'Modern medical facility', lat: -1.9585, lng: 30.1075, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=La+Croix+du+Sud', address: 'Kicukiro, Kigali' },
+            { id: 4, name: 'Rwanda Military Hospital', category: 'hospital', desc: 'Military hospital · Kanombe', lat: -1.9678, lng: 30.1482, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=Military+Hospital', address: 'Kanombe, Kigali' },
+            { id: 5, name: 'Kibagabaga Hospital', category: 'hospital', desc: 'District hospital', lat: -1.9285, lng: 30.1080, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=Kibagabaga', address: 'Kibagabaga, Kigali' },
+            { id: 6, name: 'Masaka Hospital', category: 'hospital', desc: 'Public hospital', lat: -1.9965, lng: 30.2015, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=Masaka', address: 'Masaka, Kigali' },
+            { id: 7, name: 'Nyarugenge Hospital', category: 'hospital', desc: 'District hospital', lat: -1.9620, lng: 30.0415, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=Nyarugenge', address: 'Nyarugenge, Kigali' },
+            { id: 8, name: 'Gikondo Health Centre', category: 'hospital', desc: 'Public health centre', lat: -1.9705, lng: 30.0650, icon: '🏥', image: 'https://placehold.co/600x400/ef4444/white?text=Gikondo', address: 'Gikondo, Kigali' },
+
+            // CLINICS (6)
+            { id: 9, name: 'Gahanga Health Centre', category: 'clinic', desc: 'Community health centre', lat: -2.0032, lng: 30.1185, icon: '💊', image: 'https://placehold.co/600x400/f97316/white?text=Gahanga+Clinic', address: 'Gahanga, Kigali' },
+            { id: 10, name: 'Polyclinique de Kigali', category: 'clinic', desc: 'Private clinic', lat: -1.9498, lng: 30.0820, icon: '💊', image: 'https://placehold.co/600x400/f97316/white?text=Polyclinique', address: 'Kacyiru, Kigali' },
+            { id: 11, name: 'Sante Medical Clinic', category: 'clinic', desc: 'General practice', lat: -1.9425, lng: 30.0705, icon: '💊', image: 'https://placehold.co/600x400/f97316/white?text=Sante+Medical', address: 'KN 3 Ave, Kigali' },
+            { id: 12, name: 'Wellcare Clinic', category: 'clinic', desc: 'Family medicine', lat: -1.9550, lng: 30.0890, icon: '💊', image: 'https://placehold.co/600x400/f97316/white?text=Wellcare', address: 'Kacyiru, Kigali' },
+            { id: 13, name: 'Kibagabaga Health Centre', category: 'clinic', desc: 'Public clinic', lat: -1.9305, lng: 30.1065, icon: '💊', image: 'https://placehold.co/600x400/f97316/white?text=Kibagabaga+Clinic', address: 'Kibagabaga, Kigali' },
+            { id: 14, name: 'Remera Medical Clinic', category: 'clinic', desc: 'Private practice', lat: -1.9525, lng: 30.1240, icon: '💊', image: 'https://placehold.co/600x400/f97316/white?text=Remera+Clinic', address: 'Remera, Kigali' },
+
+            // PHARMACIES (5)
+            { id: 15, name: 'Pharmacie Saint Famille', category: 'pharmacy', desc: '24/7 pharmacy', lat: -1.9452, lng: 30.0603, icon: '⚕️', image: 'https://placehold.co/600x400/10b981/white?text=Saint+Famille', address: 'KN 4 Ave, Kigali' },
+            { id: 16, name: 'Pharmacie Urumuri', category: 'pharmacy', desc: 'City centre', lat: -1.9530, lng: 30.0625, icon: '⚕️', image: 'https://placehold.co/600x400/10b981/white?text=Urumuri', address: 'KN 2 Ave, Kigali' },
+            { id: 17, name: 'Pharmacie Kigali', category: 'pharmacy', desc: 'Remera branch', lat: -1.9512, lng: 30.1230, icon: '⚕️', image: 'https://placehold.co/600x400/10b981/white?text=Pharmacie+Kigali', address: 'Remera, Kigali' },
+            { id: 18, name: 'Pharmacie de Kacyiru', category: 'pharmacy', desc: 'Kacyiru branch', lat: -1.9478, lng: 30.0835, icon: '⚕️', image: 'https://placehold.co/600x400/10b981/white?text=Kacyiru+Pharmacy', address: 'Kacyiru, Kigali' },
+            { id: 19, name: 'Pharmacie Butare', category: 'pharmacy', desc: 'Kicukiro branch', lat: -1.9790, lng: 30.0950, icon: '⚕️', image: 'https://placehold.co/600x400/10b981/white?text=Butare+Pharmacy', address: 'Kicukiro, Kigali' },
+
+            // POLICE STATIONS (5)
+            { id: 20, name: 'Kigali Central Police', category: 'police', desc: 'Headquarters', lat: -1.9500, lng: 30.0588, icon: '🚔', image: 'https://placehold.co/600x400/3b82f6/white?text=Central+Police', address: 'KN 4 Ave, Kigali' },
+            { id: 21, name: 'Remera Police Station', category: 'police', desc: 'District station', lat: -1.9515, lng: 30.1220, icon: '🚔', image: 'https://placehold.co/600x400/3b82f6/white?text=Remera+Police', address: 'Remera, Kigali' },
+            { id: 22, name: 'Kicukiro Police Station', category: 'police', desc: 'Kicukiro district', lat: -1.9785, lng: 30.0925, icon: '🚔', image: 'https://placehold.co/600x400/3b82f6/white?text=Kicukiro+Police', address: 'Kicukiro, Kigali' },
+            { id: 23, name: 'Nyarugenge Police Station', category: 'police', desc: 'Nyarugenge district', lat: -1.9610, lng: 30.0425, icon: '🚔', image: 'https://placehold.co/600x400/3b82f6/white?text=Nyarugenge+Police', address: 'Nyarugenge, Kigali' },
+            { id: 24, name: 'Gisozi Police Post', category: 'police', desc: 'Gisozi sector', lat: -1.9285, lng: 30.0580, icon: '🚔', image: 'https://placehold.co/600x400/3b82f6/white?text=Gisozi+Police', address: 'Gisozi, Kigali' },
+
+            // SCHOOLS (6)
+            { id: 25, name: 'Green Hills Academy', category: 'school', desc: 'International school', lat: -1.9335, lng: 30.0877, icon: '🏫', image: 'https://placehold.co/600x400/a78bfa/white?text=Green+Hills', address: 'KG 9 Ave, Kigali' },
+            { id: 26, name: 'Rwandex Primary School', category: 'school', desc: 'Public primary', lat: -1.9520, lng: 30.0805, icon: '🏫', image: 'https://placehold.co/600x400/a78bfa/white?text=Rwandex', address: 'Rwandex, Kigali' },
+            { id: 27, name: 'École Belge de Kigali', category: 'school', desc: 'Belgian school', lat: -1.9355, lng: 30.0950, icon: '🏫', image: 'https://placehold.co/600x400/a78bfa/white?text=Ecole+Belge', address: 'Kacyiru, Kigali' },
+            { id: 28, name: 'Kigali Parents School', category: 'school', desc: 'Private school', lat: -1.9435, lng: 30.0750, icon: '🏫', image: 'https://placehold.co/600x400/a78bfa/white?text=Parents+School', address: 'Kacyiru, Kigali' },
+            { id: 29, name: 'GS Kacyiru', category: 'school', desc: 'Government school', lat: -1.9470, lng: 30.0850, icon: '🏫', image: 'https://placehold.co/600x400/a78bfa/white?text=GS+Kacyiru', address: 'Kacyiru, Kigali' },
+            { id: 30, name: 'APACE Rwanda', category: 'school', desc: 'Technical school', lat: -1.9650, lng: 30.0755, icon: '🏫', image: 'https://placehold.co/600x400/a78bfa/white?text=APACE', address: 'Gikondo, Kigali' },
+
+            // UNIVERSITIES (3)
+            { id: 31, name: 'University of Rwanda - CHUK', category: 'university', desc: 'College of Medicine', lat: -1.9425, lng: 30.0625, icon: '🎓', image: 'https://placehold.co/600x400/8b5cf6/white?text=UR+CHUK', address: 'CHUK Campus' },
+            { id: 32, name: 'Carnegie Mellon University Africa', category: 'university', desc: 'CMU-Africa', lat: -1.9278, lng: 30.1175, icon: '🎓', image: 'https://placehold.co/600x400/8b5cf6/white?text=CMU', address: 'Kigali Innovation City' },
+            { id: 33, name: 'African Leadership University', category: 'university', desc: 'ALU Rwanda', lat: -1.9555, lng: 30.1115, icon: '🎓', image: 'https://placehold.co/600x400/8b5cf6/white?text=ALU', address: 'Kigali' },
+
+            // HOTELS (5)
+            { id: 34, name: 'Kigali Marriott Hotel', category: 'hotel', desc: '5-star luxury', lat: -1.9502, lng: 30.0596, icon: '🏨', image: 'https://placehold.co/600x400/f59e0b/white?text=Marriott', address: 'KN 3 Ave, Kigali' },
+            { id: 35, name: 'Radisson Blu Hotel', category: 'hotel', desc: 'Convention centre', lat: -1.9542, lng: 30.0902, icon: '🏨', image: 'https://placehold.co/600x400/f59e0b/white?text=Radisson+Blu', address: 'KG 2 Rd, Kigali' },
+            { id: 36, name: 'Hotel des Mille Collines', category: 'hotel', desc: 'Historic hotel', lat: -1.9475, lng: 30.0618, icon: '🏨', image: 'https://placehold.co/600x400/f59e0b/white?text=Mille+Collines', address: 'KN 4 Ave, Kigali' },
+            { id: 37, name: 'Park Inn by Radisson', category: 'hotel', desc: 'City centre', lat: -1.9522, lng: 30.0585, icon: '🏨', image: 'https://placehold.co/600x400/f59e0b/white?text=Park+Inn', address: 'KN 2 Ave, Kigali' },
+            { id: 38, name: 'Lemigo Hotel', category: 'hotel', desc: 'Conference hotel', lat: -1.9538, lng: 30.0935, icon: '🏨', image: 'https://placehold.co/600x400/f59e0b/white?text=Lemigo', address: 'Kacyiru, Kigali' },
+
+            // MARKETS (4)
+            { id: 39, name: 'Kimironko Market', category: 'market', desc: 'Largest open market', lat: -1.9385, lng: 30.1020, icon: '🛒', image: 'https://placehold.co/600x400/ec4899/white?text=Kimironko', address: 'Kimironko Rd, Kigali' },
+            { id: 40, name: 'Nyabugogo Market', category: 'market', desc: 'Transport hub', lat: -1.9607, lng: 30.0458, icon: '🛒', image: 'https://placehold.co/600x400/ec4899/white?text=Nyabugogo', address: 'Nyabugogo, Kigali' },
+            { id: 41, name: 'Kicukiro Market', category: 'market', desc: 'Local market', lat: -1.9780, lng: 30.0945, icon: '🛒', image: 'https://placehold.co/600x400/ec4899/white?text=Kicukiro', address: 'Kicukiro, Kigali' },
+            { id: 42, name: 'Gikondo Market', category: 'market', desc: 'Industrial market', lat: -1.9700, lng: 30.0660, icon: '🛒', image: 'https://placehold.co/600x400/ec4899/white?text=Gikondo', address: 'Gikondo, Kigali' },
+
+            // SUPERMARKETS (5)
+            { id: 43, name: 'Simba Supermarket - Kacyiru', category: 'supermarket', desc: 'Grocery & more', lat: -1.9474, lng: 30.0601, icon: '🏪', image: 'https://placehold.co/600x400/06b6d4/white?text=Simba+Kacyiru', address: 'Kacyiru, Kigali' },
+            { id: 44, name: 'Nakumatt - Kigali Heights', category: 'supermarket', desc: 'Shopping mall', lat: -1.9545, lng: 30.0915, icon: '🏪', image: 'https://placehold.co/600x400/06b6d4/white?text=Nakumatt', address: 'Kigali Heights' },
+            { id: 45, name: 'Super U - Kicukiro', category: 'supermarket', desc: 'French supermarket', lat: -1.9795, lng: 30.0965, icon: '🏪', image: 'https://placehold.co/600x400/06b6d4/white?text=Super+U', address: 'Kicukiro, Kigali' },
+            { id: 46, name: 'Game Store', category: 'supermarket', desc: 'Department store', lat: -1.9535, lng: 30.0910, icon: '🏪', image: 'https://placehold.co/600x400/06b6d4/white?text=Game', address: 'Kigali Heights' },
+            { id: 47, name: 'Simba Supermarket - Remera', category: 'supermarket', desc: 'Remera branch', lat: -1.9518, lng: 30.1235, icon: '🏪', image: 'https://placehold.co/600x400/06b6d4/white?text=Simba+Remera', address: 'Remera, Kigali' },
+
+            // RESTAURANTS (8)
+            { id: 48, name: 'Heaven Restaurant', category: 'restaurant', desc: 'Fine dining', lat: -1.9420, lng: 30.0682, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=Heaven', address: 'KG 7 Ave, Kigali' },
+            { id: 49, name: 'The Hut Restaurant', category: 'restaurant', desc: 'Local cuisine', lat: -1.9565, lng: 30.0950, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=The+Hut', address: 'Kibagabaga, Kigali' },
+            { id: 50, name: 'Repub Lounge', category: 'restaurant', desc: 'Trendy lounge', lat: -1.9448, lng: 30.0720, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=Repub', address: 'KN 3 Ave, Kigali' },
+            { id: 51, name: 'Sole Luna', category: 'restaurant', desc: 'Italian cuisine', lat: -1.9475, lng: 30.0650, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=Sole+Luna', address: 'Kacyiru, Kigali' },
+            { id: 52, name: 'Bourbon Coffee - Restaurant', category: 'restaurant', desc: 'Cafe & restaurant', lat: -1.9490, lng: 30.0605, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=Bourbon', address: 'KCT, Kigali' },
+            { id: 53, name: 'Meze Fresh', category: 'restaurant', desc: 'Healthy eats', lat: -1.9552, lng: 30.0908, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=Meze+Fresh', address: 'Kigali Heights' },
+            { id: 54, name: 'Kigali Serena Hotel Restaurant', category: 'restaurant', desc: 'Luxury dining', lat: -1.9520, lng: 30.0625, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=Serena', address: 'KN 2 Ave, Kigali' },
+            { id: 55, name: 'Poivre Noir', category: 'restaurant', desc: 'French cuisine', lat: -1.9445, lng: 30.0710, icon: '🍽️', image: 'https://placehold.co/600x400/f43f5e/white?text=Poivre+Noir', address: 'Kacyiru, Kigali' },
+
+            // CAFES (5)
+            { id: 56, name: 'Bourbon Coffee - KCT', category: 'cafe', desc: 'Rwandan coffee', lat: -1.9490, lng: 30.0605, icon: '☕', image: 'https://placehold.co/600x400/d97706/white?text=Bourbon+KCT', address: 'KCT, Kigali' },
+            { id: 57, name: 'Question Coffee', category: 'cafe', desc: 'Specialty coffee', lat: -1.9525, lng: 30.0620, icon: '☕', image: 'https://placehold.co/600x400/d97706/white?text=Question', address: 'KN 2 Ave, Kigali' },
+            { id: 58, name: 'Cafe Conect', category: 'cafe', desc: 'Coffee & coworking', lat: -1.9472, lng: 30.0618, icon: '☕', image: 'https://placehold.co/600x400/d97706/white?text=Cafe+Conect', address: 'Kacyiru, Kigali' },
+            { id: 59, name: 'Starbucks - Kigali Heights', category: 'cafe', desc: 'International coffee', lat: -1.9540, lng: 30.0912, icon: '☕', image: 'https://placehold.co/600x400/d97706/white?text=Starbucks', address: 'Kigali Heights' },
+            { id: 60, name: 'Java House', category: 'cafe', desc: 'Coffee & bites', lat: -1.9510, lng: 30.0610, icon: '☕', image: 'https://placehold.co/600x400/d97706/white?text=Java+House', address: 'KN 3 Ave, Kigali' },
+
+            // BANKS (6)
+            { id: 61, name: 'Bank of Kigali - HQ', category: 'bank', desc: 'Main branch', lat: -1.9530, lng: 30.0615, icon: '🏦', image: 'https://placehold.co/600x400/059669/white?text=BK+Headquarters', address: 'KN 4 Ave, Kigali' },
+            { id: 62, name: 'Equity Bank - Kigali', category: 'bank', desc: 'Commercial banking', lat: -1.9465, lng: 30.0780, icon: '🏦', image: 'https://placehold.co/600x400/059669/white?text=Equity+Bank', address: 'KG 11 Ave, Kigali' },
+            { id: 63, name: 'KCB Bank Rwanda', category: 'bank', desc: 'Commercial bank', lat: -1.9512, lng: 30.0612, icon: '🏦', image: 'https://placehold.co/600x400/059669/white?text=KCB', address: 'KN 3 Ave, Kigali' },
+            { id: 64, name: 'Ecobank Rwanda', category: 'bank', desc: 'Pan-African bank', lat: -1.9485, lng: 30.0608, icon: '🏦', image: 'https://placehold.co/600x400/059669/white?text=Ecobank', address: 'Kacyiru, Kigali' },
+            { id: 65, name: 'GT Bank Rwanda', category: 'bank', desc: 'Commercial bank', lat: -1.9528, lng: 30.0622, icon: '🏦', image: 'https://placehold.co/600x400/059669/white?text=GT+Bank', address: 'KN 2 Ave, Kigali' },
+            { id: 66, name: 'I&M Bank Rwanda', category: 'bank', desc: 'Commercial bank', lat: -1.9505, lng: 30.0602, icon: '🏦', image: 'https://placehold.co/600x400/059669/white?text=I&M+Bank', address: 'KN 4 Ave, Kigali' },
+
+            // ATMS (5)
+            { id: 67, name: 'BK ATM - Kacyiru', category: 'atm', desc: '24/7 ATM', lat: -1.9470, lng: 30.0605, icon: '💳', image: 'https://placehold.co/600x400/2563eb/white?text=BK+ATM', address: 'Kacyiru' },
+            { id: 68, name: 'Equity ATM - Remera', category: 'atm', desc: '24/7', lat: -1.9520, lng: 30.1245, icon: '💳', image: 'https://placehold.co/600x400/2563eb/white?text=Equity+ATM', address: 'Remera' },
+            { id: 69, name: 'KCB ATM - KCT', category: 'atm', desc: 'Shopping area', lat: -1.9495, lng: 30.0610, icon: '💳', image: 'https://placehold.co/600x400/2563eb/white?text=KCB+ATM', address: 'KCT' },
+            { id: 70, name: 'BK ATM - Kimironko', category: 'atm', desc: 'Market area', lat: -1.9390, lng: 30.1025, icon: '💳', image: 'https://placehold.co/600x400/2563eb/white?text=BK+Kimironko', address: 'Kimironko' },
+            { id: 71, name: 'Equity ATM - Kigali Heights', category: 'atm', desc: 'Mall ATM', lat: -1.9542, lng: 30.0918, icon: '💳', image: 'https://placehold.co/600x400/2563eb/white?text=Equity+Heights', address: 'Kigali Heights' },
+
+            // FUEL STATIONS (4)
+            { id: 72, name: 'Kobil - Kacyiru', category: 'fuel', desc: 'Fuel station', lat: -1.9465, lng: 30.0615, icon: '⛽', image: 'https://placehold.co/600x400/dc2626/white?text=Kobil', address: 'Kacyiru' },
+            { id: 73, name: 'Total - Remera', category: 'fuel', desc: '24/7 fuel', lat: -1.9510, lng: 30.1235, icon: '⛽', image: 'https://placehold.co/600x400/dc2626/white?text=Total', address: 'Remera' },
+            { id: 74, name: 'Engen - Kigali Heights', category: 'fuel', desc: 'Fuel & shop', lat: -1.9550, lng: 30.0905, icon: '⛽', image: 'https://placehold.co/600x400/dc2626/white?text=Engen', address: 'Kigali Heights' },
+            { id: 75, name: 'Total - Kacyiru', category: 'fuel', desc: 'Fuel station', lat: -1.9480, lng: 30.0820, icon: '⛽', image: 'https://placehold.co/600x400/dc2626/white?text=Total+Kacyiru', address: 'Kacyiru' },
+
+            // PARKS (4)
+            { id: 76, name: 'Nyarutarama Sports Complex', category: 'park', desc: 'Golf & recreation', lat: -1.9278, lng: 30.0978, icon: '🌳', image: 'https://placehold.co/600x400/4ade80/white?text=Nyarutarama', address: 'Nyarutarama' },
+            { id: 77, name: 'Kigali Genocide Memorial', category: 'park', desc: 'Memorial gardens', lat: -1.9318, lng: 30.0605, icon: '🌳', image: 'https://placehold.co/600x400/4ade80/white?text=Memorial', address: 'Gisozi' },
+            { id: 78, name: 'Rebero Hill Park', category: 'park', desc: 'Scenic viewpoint', lat: -1.9805, lng: 30.1020, icon: '🌳', image: 'https://placehold.co/600x400/4ade80/white?text=Rebero', address: 'Rebero, Kigali' },
+            { id: 79, name: 'Mount Kigali Park', category: 'park', desc: 'Hiking trails', lat: -1.9395, lng: 30.0480, icon: '🌳', image: 'https://placehold.co/600x400/4ade80/white?text=Mount+Kigali', address: 'Mount Kigali' },
+
+            // GYMS (3)
+            { id: 80, name: 'Primal Gym - Kacyiru', category: 'gym', desc: 'Fitness centre', lat: -1.9478, lng: 30.0625, icon: '💪', image: 'https://placehold.co/600x400/7c3aed/white?text=Primal+Gym', address: 'Kacyiru' },
+            { id: 81, name: 'Planet Fitness - Remera', category: 'gym', desc: 'Modern gym', lat: -1.9525, lng: 30.1240, icon: '💪', image: 'https://placehold.co/600x400/7c3aed/white?text=Planet+Fitness', address: 'Remera' },
+            { id: 82, name: 'Kigali Fitness Centre', category: 'gym', desc: 'Health club', lat: -1.9492, lng: 30.0612, icon: '💪', image: 'https://placehold.co/600x400/7c3aed/white?text=Kigali+Fitness', address: 'Kacyiru' },
+        ];
+
+        // ==================== GLOBAL VARIABLES ====================
+        let map, routingControl, userLat = -1.9536, userLng = 30.0606;
+        let currentDestination = null;
+        let currentNearestInCategory = null;
+
+        // ==================== NOTIFICATION FUNCTION ====================
+        function showNotification(message, type = 'success') {
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+            if (type === 'error') {
+                notif.classList.add('error');
+            }
+            notif.textContent = message;
+            document.body.appendChild(notif);
+
+            setTimeout(() => {
+                notif.remove();
+            }, 3000);
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                hospital: '#ef4444', clinic: '#f97316', pharmacy: '#10b981',
+                police: '#3b82f6', school: '#a78bfa', university: '#8b5cf6',
+                hotel: '#f59e0b', market: '#ec4899', supermarket: '#06b6d4',
+                restaurant: '#f43f5e', cafe: '#d97706', bank: '#059669',
+                atm: '#2563eb', fuel: '#dc2626', park: '#4ade80', gym: '#7c3aed'
+            };
+            return colors[category] || '#3b82f6';
+        }
+
+        // ==================== FIND NEAREST IN CURRENT CATEGORY ====================
+        function updateNearestInCategory() {
+            const activeCat = document.querySelector('.category-card.active')?.dataset.cat || 'all';
+
+            let locationsToCheck = cityLocations;
+            if (activeCat !== 'all') {
+                locationsToCheck = cityLocations.filter(loc => loc.category === activeCat);
+            }
+
+            let nearest = null;
+            let minDist = Infinity;
+
+            locationsToCheck.forEach(loc => {
+                const dist = haversine(userLat, userLng, loc.lat, loc.lng);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = { ...loc, distance: dist };
+                }
+            });
+
+            currentNearestInCategory = nearest;
+
+            if (nearest) {
+                const banner = document.getElementById('nearestBanner');
+                banner.style.display = 'flex';
+
+                const categoryLabel = activeCat === 'all' ? 'NEAREST PLACE' : `NEAREST ${activeCat.toUpperCase()}`;
+                document.getElementById('nearestCategoryLabel').textContent = categoryLabel;
+
+                document.getElementById('nearestName').textContent = nearest.name;
+                document.getElementById('nearestCategory').textContent = nearest.category.charAt(0).toUpperCase() + nearest.category.slice(1);
+                document.getElementById('nearestDist').textContent =
+                    nearest.distance < 1 ? `(${Math.round(nearest.distance * 1000)}m away)` : `(${nearest.distance.toFixed(1)}km away)`;
+
+                document.getElementById('nearestDirectionsBtn').onclick = () => {
+                    selectLocation(nearest.lat, nearest.lng, nearest.name);
+                };
+            } else {
+                document.getElementById('nearestBanner').style.display = 'none';
+            }
+        }
+
+        function scrollToNearest() {
+            const nearestCard = document.querySelector('.spot-card.nearest');
+            if (nearestCard) {
+                nearestCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // ==================== MAP FUNCTIONS ====================
+        function initMap() {
+            map = L.map('kigaliMap').setView([userLat, userLng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            updateUserMarker();
+
+            cityLocations.forEach(loc => {
+                const marker = L.marker([loc.lat, loc.lng], {
+                    icon: L.divIcon({
+                        html: `<div style="background:${getCategoryColor(loc.category)}; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid white; font-size:1.3rem; box-shadow:0 5px 15px #000;">${loc.icon}</div>`,
+                        className: '',
+                        iconSize: [40, 40],
+                        popupAnchor: [0, -20]
+                    })
+                }).bindPopup(`
+                    <div style="text-align:center; min-width:160px;">
+                        <strong style="color:#3b82f6;">${loc.name}</strong><br>
+                        <small>${loc.address}</small><br>
+                        <button onclick="selectLocation(${loc.lat}, ${loc.lng}, '${loc.name}')" 
+                            style="background:#3b82f6; border:none; color:white; padding:5px 15px; border-radius:20px; margin-top:8px; cursor:pointer;">
+                            Get Directions
+                        </button>
+                    </div>
+                `, { className: 'custom-popup' });
+
+                marker.addTo(map);
+            });
+        }
+
+        function updateUserMarker() {
+            if (!map) return;
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker && layer.options.title === 'You') {
+                    map.removeLayer(layer);
+                }
+            });
+            L.marker([userLat, userLng], {
+                icon: L.divIcon({
+                    html: '<div style="background:#3b82f6; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 20px #3b82f6;"></div>',
+                    iconSize: [20, 20]
+                }),
+                title: 'You'
+            }).addTo(map);
+        }
+
+        window.selectLocation = function (lat, lng, name) {
+            currentDestination = { lat, lng, name };
+            drawRouteTo(lat, lng, name);
+            map.setView([lat, lng], 14);
+            showNotification(`📍 Getting directions to ${name}`);
+        };
+
+        function drawRouteTo(destLat, destLng, destName) {
+            if (!map) return;
+            if (routingControl) map.removeControl(routingControl);
+
+            routingControl = L.Routing.control({
+                waypoints: [L.latLng(userLat, userLng), L.latLng(destLat, destLng)],
+                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+                lineOptions: { styles: [{ color: '#3b82f6', weight: 6 }] },
+                show: false,
+                addWaypoints: false,
+                createMarker: () => null
+            }).addTo(map);
+
+            routingControl.on('routesfound', function (e) {
+                const route = e.routes[0];
+                const distKm = (route.summary.totalDistance / 1000).toFixed(1);
+                const durationMin = Math.round(route.summary.totalTime / 60);
+
+                document.getElementById('routeDist').innerHTML = `<i class="fas fa-route"></i> ${distKm} km to ${destName}`;
+                document.getElementById('walkTime').innerHTML = `<i class="fas fa-person-walking"></i> ${Math.round(distKm * 12)} min`;
+                document.getElementById('driveTime').innerHTML = `<i class="fas fa-car"></i> ${durationMin} min`;
+
+                const motoFare = Math.round(distKm * 200);
+                const taxiFare = Math.round(distKm * 600);
+
+                document.getElementById('taxiFare').innerHTML = `<i class="fas fa-taxi"></i> ${taxiFare.toLocaleString()} RWF`;
+
+                const motoElement = document.getElementById('motoFare');
+                if (motoElement) {
+                    motoElement.innerHTML = `<i class="fas fa-motorcycle"></i> ${motoFare.toLocaleString()} RWF`;
+                }
+            });
+
+            routingControl.on('routingerror', function () {
+                showNotification('⚠️ Could not calculate route. Using approximate distance.', 'error');
+            });
+        }
+
+        // ==================== LOCATION DETECTION ====================
+        window.detectUserLocation = function () {
+            const locText = document.getElementById('locationText');
+            locText.innerHTML = 'Locating... <i class="fas fa-spinner fa-spin"></i>';
+
+            if (!navigator.geolocation) {
+                locText.innerText = 'Kigali, Rwanda (default)';
+                renderCards();
+                updateNearestInCategory();
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}`, {
+                        headers: { 'Accept-Language': 'en' }
+                    })
+                        .then(r => r.json())
+                        .then(d => {
+                            const sub = d.address?.suburb || d.address?.neighbourhood || '';
+                            const city = d.address?.city || 'Kigali';
+                            locText.innerHTML = sub ? `${sub}, ${city}` : city;
+                            showNotification(`📍 You are in ${locText.innerHTML}`);
+                        })
+                        .catch(() => {
+                            locText.innerHTML = `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`;
+                            showNotification(`📍 Location updated`);
+                        });
+
+                    updateUserMarker();
+                    map.setView([userLat, userLng], 14);
+
+                    renderCards();
+                    updateNearestInCategory();
+
+                    if (currentDestination) {
+                        drawRouteTo(currentDestination.lat, currentDestination.lng, currentDestination.name);
+                    }
+                },
+                (err) => {
+                    locText.innerHTML = 'Kigali, Rwanda (default)';
+                    renderCards();
+                    updateNearestInCategory();
+                    showNotification('📍 Using default Kigali location', 'error');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        };
+
+        // ==================== RENDER CARDS ====================
+        function renderCards() {
+            const grid = document.getElementById('spotsGrid');
+            grid.innerHTML = '';
+
+            const locationsWithDist = cityLocations.map(loc => ({
+                ...loc,
+                distance: haversine(userLat, userLng, loc.lat, loc.lng)
+            }));
+
+            locationsWithDist.sort((a, b) => a.distance - b.distance);
+
+            locationsWithDist.forEach(loc => {
+                const distText = loc.distance < 1 ? `${Math.round(loc.distance * 1000)}m` : `${loc.distance.toFixed(1)}km`;
+                const walkTime = Math.round(loc.distance * 12);
+                const driveTime = Math.max(1, Math.round(loc.distance / 30 * 60));
+
+                const motoFare = Math.round(loc.distance * 200);
+                const carFare = Math.round(loc.distance * 400);
+                const taxiFare = Math.round(loc.distance * 600);
+                const busFare = 300;
+
+                const card = document.createElement('div');
+                card.className = 'spot-card';
+                card.dataset.category = loc.category;
+                card.dataset.name = loc.name.toLowerCase();
+                card.dataset.id = loc.id;
+                card.dataset.distance = loc.distance;
+
+                card.onclick = () => selectLocation(loc.lat, loc.lng, loc.name);
+
+                const imageHtml = `<img src="${loc.image}" alt="${loc.name}" onerror="this.onerror=null; this.src='https://placehold.co/600x400/1e293b/3b82f6?text=${encodeURIComponent(loc.name.substring(0, 20))}'">`;
+
+                card.innerHTML = `
+                    <div class="spot-image">
+                        ${imageHtml}
+                    </div>
+                    <div class="spot-content">
+                        <div class="spot-icon">${loc.icon}</div>
+                        <div class="spot-name">${loc.name}</div>
+                        <span class="spot-category">${loc.category.charAt(0).toUpperCase() + loc.category.slice(1)}</span>
+                        <div class="spot-desc">${loc.desc}</div>
+                        <div class="spot-meta">
+                            <div class="distance-badge">
+                                <i class="fas fa-location-arrow"></i>
+                                <span>${distText}</span>
+                            </div>
+                        </div>
+                        <div class="transport-mini">
+                            <span class="moto"><i class="fas fa-motorcycle"></i> ${motoFare.toLocaleString()} RWF</span>
+                            <span class="bus"><i class="fas fa-bus"></i> ${busFare} RWF</span>
+                            <span><i class="fas fa-car"></i> ${carFare.toLocaleString()} RWF</span>
+                            <span><i class="fas fa-taxi"></i> ${taxiFare.toLocaleString()} RWF</span>
+                        </div>
+                        <button class="card-btn" onclick="event.stopPropagation(); selectLocation(${loc.lat}, ${loc.lng}, '${loc.name}')">
+                            <i class="fas fa-diamond-turn-right"></i> Directions
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Update nearest highlighting
+            if (currentNearestInCategory) {
+                document.querySelectorAll('.spot-card').forEach(card => {
+                    card.classList.remove('nearest');
+                    if (card.dataset.id == currentNearestInCategory.id) {
+                        card.classList.add('nearest');
+                    }
+                });
+            }
+        }
+
+        // ==================== FILTERING & SORTING ====================
+        window.filterCategory = function (category, element) {
+            // Update active state
+            document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+
+            // Get all cards
+            const cards = Array.from(document.querySelectorAll('.spot-card'));
+
+            // First, show/hide based on category
+            cards.forEach(card => {
+                const cardCategory = card.dataset.category;
+                if (category === 'all' || cardCategory === category) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Then apply radius filter and search
+            applyFilters();
+
+            // Update nearest for this category
+            updateNearestInCategory();
+        };
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const radius = parseFloat(document.getElementById('radiusSlider').value);
+            const sortBy = document.getElementById('sortSelect').value;
+
+            const cards = Array.from(document.querySelectorAll('.spot-card'));
+
+            // Filter visible cards by search term and radius
+            const visibleCards = cards.filter(card => {
+                if (card.style.display === 'none') return false;
+
+                const name = card.dataset.name;
+                const distance = parseFloat(card.dataset.distance);
+
+                const nameMatch = !searchTerm || name.includes(searchTerm);
+                const distMatch = distance <= radius;
+
+                return nameMatch && distMatch;
+            });
+
+            // Sort visible cards
+            if (sortBy === 'distance') {
+                visibleCards.sort((a, b) => parseFloat(a.dataset.distance) - parseFloat(b.dataset.distance));
+            } else if (sortBy === 'name') {
+                visibleCards.sort((a, b) => a.dataset.name.localeCompare(b.dataset.name));
+            } else if (sortBy === 'category') {
+                visibleCards.sort((a, b) => a.dataset.category.localeCompare(b.dataset.category));
+            }
+
+            // Hide all cards first
+            cards.forEach(card => {
+                if (card.style.display !== 'none') {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show visible cards in sorted order
+            const grid = document.getElementById('spotsGrid');
+            visibleCards.forEach(card => {
+                card.style.display = 'flex';
+                grid.appendChild(card);
+            });
+
+            // Update nearest highlighting
+            if (currentNearestInCategory) {
+                cards.forEach(card => {
+                    card.classList.remove('nearest');
+                    if (card.dataset.id == currentNearestInCategory.id) {
+                        card.classList.add('nearest');
+                    }
+                });
+            }
+
+            document.getElementById('resultsCount').textContent = visibleCards.length;
+
+            if (visibleCards.length === 0) {
+                showNotification(`No places found within ${radius}km`, 'error');
+            }
+        }
+
+        // ==================== INIT ====================
+        window.onload = function () {
+            // Set initial counts
+            document.getElementById('countAll').textContent = cityLocations.length;
+            document.getElementById('countHospital').textContent = cityLocations.filter(l => l.category === 'hospital').length;
+            document.getElementById('countClinic').textContent = cityLocations.filter(l => l.category === 'clinic').length;
+            document.getElementById('countPharmacy').textContent = cityLocations.filter(l => l.category === 'pharmacy').length;
+            document.getElementById('countPolice').textContent = cityLocations.filter(l => l.category === 'police').length;
+            document.getElementById('countSchool').textContent = cityLocations.filter(l => l.category === 'school').length;
+            document.getElementById('countUniversity').textContent = cityLocations.filter(l => l.category === 'university').length;
+            document.getElementById('countHotel').textContent = cityLocations.filter(l => l.category === 'hotel').length;
+            document.getElementById('countMarket').textContent = cityLocations.filter(l => l.category === 'market').length;
+            document.getElementById('countSupermarket').textContent = cityLocations.filter(l => l.category === 'supermarket').length;
+            document.getElementById('countRestaurant').textContent = cityLocations.filter(l => l.category === 'restaurant').length;
+            document.getElementById('countCafe').textContent = cityLocations.filter(l => l.category === 'cafe').length;
+            document.getElementById('countBank').textContent = cityLocations.filter(l => l.category === 'bank').length;
+            document.getElementById('countATM').textContent = cityLocations.filter(l => l.category === 'atm').length;
+            document.getElementById('countFuel').textContent = cityLocations.filter(l => l.category === 'fuel').length;
+            document.getElementById('countPark').textContent = cityLocations.filter(l => l.category === 'park').length;
+            document.getElementById('countGym').textContent = cityLocations.filter(l => l.category === 'gym').length;
+
+            initMap();
+            renderCards();
+
+            setTimeout(() => {
+                detectUserLocation();
+            }, 500);
+
+            document.getElementById('radiusSlider').addEventListener('input', function () {
+                document.getElementById('radiusValue').textContent = this.value;
+            });
+
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            document.getElementById('sortSelect').addEventListener('change', applyFilters);
+
+            document.getElementById('radiusSlider').addEventListener('change', function () {
+                document.getElementById('radiusValue').textContent = this.value;
+                applyFilters();
+            });
+        };
+    </script>
+</body>
+
+</html>
