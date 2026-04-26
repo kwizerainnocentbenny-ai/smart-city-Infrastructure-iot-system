@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kigali Tourist Guide · smart route</title>
+    <!-- Font Awesome 6 (same as reference) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Leaflet (free OSM) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Routing Machine (OSRM free) -->
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <style>
+        /* ----- consistent with smart city dashboard style (glass, shadows, modern) ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0b1120;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* top bar: ONLY home button – as requested */
+        .top-home-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 16px 30px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .brand i {
+            color: #a78bfa;
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 10px #a78bfa);
+        }
+
+        .home-btn {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px;
+            padding: 12px 32px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.7);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* main content */
+        .main-content {
+            max-width: 1600px;
+            margin: 30px auto;
+            padding: 0 30px;
+            width: 100%;
+        }
+
+        /* header with live location */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .page-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .page-title i {
+            color: #a78bfa;
+            font-size: 3rem;
+            filter: drop-shadow(0 0 15px #a78bfa);
+            animation: float 3s infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .live-location-badge {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            border: 2px solid #a78bfa60;
+            border-radius: 60px;
+            padding: 15px 30px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .live-location-badge:hover {
+            border-color: #a78bfa;
+            background: rgba(167, 139, 250, 0.2);
+        }
+
+        .live-location-badge i {
+            color: #4ade80;
+            font-size: 1.3rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* ---------- TOURIST SPOT CARDS (with images) ---------- */
+        .spots-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin: 40px 0 30px;
+        }
+
+        .spot-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 2px solid rgba(167, 139, 250, 0.25);
+            border-radius: 28px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spot-card:hover {
+            transform: translateY(-8px);
+            border-color: #a78bfa;
+            box-shadow: 0 30px 50px rgba(167, 139, 250, 0.3);
+        }
+
+        .spot-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 2px solid #a78bfa60;
+            transition: transform 0.5s;
+        }
+
+        .spot-card:hover .spot-image {
+            transform: scale(1.03);
+        }
+
+        .spot-content {
+            padding: 22px 20px;
+            color: white;
+            position: relative;
+        }
+
+        .spot-icon {
+            position: absolute;
+            top: -25px;
+            right: 20px;
+            background: linear-gradient(135deg, #7c3aed, #a78bfa);
+            width: 55px;
+            height: 55px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 10px 20px #a78bfa80;
+            border: 2px solid white;
+        }
+
+        .spot-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            padding-right: 50px;
+        }
+
+        .spot-desc {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .spot-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        .spot-meta i {
+            margin-right: 5px;
+        }
+
+        /* ----- leaflet map (routing) ----- */
+        .tour-map-section {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 25px;
+            border: 2px solid rgba(167, 139, 250, 0.3);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            margin: 30px 0;
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .map-title {
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .map-title i {
+            color: #a78bfa;
+        }
+
+        .route-panel {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 12px 28px;
+            border-radius: 40px;
+            border: 2px solid #a78bfa60;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        #touristMap {
+            height: 480px;
+            width: 100%;
+            border-radius: 24px;
+            border: 3px solid #a78bfa60;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        /* custom popup */
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            color: white;
+            border-radius: 20px;
+            border: 2px solid #a78bfa;
+            box-shadow: 0 20px 40px #a78bfa40;
+        }
+
+        .custom-popup .leaflet-popup-tip {
+            background: #a78bfa;
+        }
+
+        /* distance & route info */
+        .route-stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-bubble {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            border: 2px solid #a78bfa;
+            border-radius: 60px;
+            padding: 14px 30px;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 20px #a78bfa30;
+        }
+
+        .stat-bubble i {
+            color: #a78bfa;
+            font-size: 1.3rem;
+        }
+
+        /* responsive */
+        @media (max-width: 1000px) {
+            .spots-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .spots-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* attribution */
+        .leaflet-control-attribution {
+            background: rgba(0, 0, 0, 0.5) !important;
+            color: #cbd5e1 !important;
+            border-radius: 20px 0 0 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+
+        <!-- TOP BAR: only HOME button (exactly one navigation) -->
+        <div class="top-home-bar">
+            <div class="brand">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Kigali · Tourist Guide</span>
+            </div>
+            <a href="smart_city_dashboard.html" class="home-btn">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- Header with live location detection -->
+            <div class="page-header">
+                <div class="page-title">
+                    <i class="fas fa-umbrella-beach"></i>
+                    <span>Explore & route</span>
+                </div>
+                <div class="live-location-badge" id="locationBadge" onclick="detectUserLocation()">
+                    <i class="fas fa-location-dot" id="locIcon"></i>
+                    <span id="locationText">Detecting your location…</span>
+                </div>
+            </div>
+
+            <!-- TOURIST SPOT CARDS (with real images) -->
+            <div class="spots-grid" id="spotsGrid"></div>
+
+            <!-- MAP SECTION (Leaflet + routing) -->
+            <div class="tour-map-section">
+                <div class="map-header">
+                    <div class="map-title">
+                        <i class="fas fa-map"></i>
+                        <span>Live route from you</span>
+                    </div>
+                    <div class="route-panel" id="routeSummary">
+                        <i class="fas fa-route"></i> <span id="routeDist">—</span>
+                    </div>
+                </div>
+                <!-- Leaflet map container -->
+                <div id="touristMap"></div>
+
+                <!-- extra distance / time stats -->
+                <div class="route-stats">
+                    <div class="stat-bubble"><i class="fas fa-person-walking"></i> <span id="walkTime">—</span></div>
+                    <div class="stat-bubble"><i class="fas fa-car"></i> <span id="driveTime">—</span></div>
+                    <div class="stat-bubble"><i class="fas fa-taxi"></i> <span id="taxiFare">—</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- TOURIST SPOTS (with images & details) ----------
+        const touristSpots = [
+            {
+                id: 1,
+                name: 'Kigali Genocide Memorial',
+                desc: 'Final resting place for 250,000+ victims. Peaceful gardens and powerful exhibitions.',
+                lat: -1.9318,
+                lng: 30.0605,
+                icon: '🕊️',
+                image: 'https://images.unsplash.com/photo-1583426573939-6d7b3c4d5b8a?w=400&auto=format',
+                category: 'memorial'
+            },
+            {
+                id: 2,
+                name: 'Inema Arts Centre',
+                desc: 'Vibrant cooperative of local artists. Paintings, crafts, and live music.',
+                lat: -1.9440,
+                lng: 30.0912,
+                icon: '🎨',
+                image: 'https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=400&auto=format',
+                category: 'art'
+            },
+            {
+                id: 3,
+                name: 'Kandt House Museum',
+                desc: 'Natural history & ethnography housed in explorer Richard Kandt’s former villa.',
+                lat: -1.9309,
+                lng: 30.0588,
+                icon: '🏛️',
+                image: 'https://images.unsplash.com/photo-1577086664693-894d8405334a?w=400&auto=format',
+                category: 'museum'
+            },
+            {
+                id: 4,
+                name: 'Kimironko Market',
+                desc: 'Largest open-air market: fresh produce, fabrics, and authentic crafts.',
+                lat: -1.9385,
+                lng: 30.1020,
+                icon: '🛒',
+                image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&auto=format',
+                category: 'market'
+            },
+            {
+                id: 5,
+                name: 'Nyamirambo',
+                desc: 'Multicultural neighborhood famous for street food, local vibe, and nightlife.',
+                lat: -1.9850,
+                lng: 30.0540,
+                icon: '🌆',
+                image: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?w=400&auto=format',
+                category: 'cultural'
+            },
+            {
+                id: 6,
+                name: 'Nyarutarama Golf Club',
+                desc: '18‑hole golf course surrounded by rolling hills, lounge and restaurant.',
+                lat: -1.9278,
+                lng: 30.0978,
+                icon: '⛳',
+                image: 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=400&auto=format',
+                category: 'leisure'
+            }
+        ];
+
+        // ---------- GLOBAL VARIABLES ----------
+        let map, routingControl, userLat = -1.9441, userLng = 30.0619; // fallback Kigali centre
+        let currentDestination = null; // { lat, lng, name }
+
+        // ---------- INIT MAP (with OSM) ----------
+        function initMap() {
+            map = L.map('touristMap').setView([userLat, userLng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            }).addTo(map);
+
+            // Add user marker (will move after geolocation)
+            const userMarker = L.marker([userLat, userLng], {
+                icon: L.divIcon({
+                    html: '<div style="background:#3b82f6; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 20px #3b82f6;"></div>',
+                    className: 'user-marker',
+                    iconSize: [20, 20]
+                }),
+                title: 'You are here (default)'
+            }).addTo(map);
+
+            // Add tourist spot markers
+            touristSpots.forEach(spot => {
+                const marker = L.marker([spot.lat, spot.lng], {
+                    icon: L.divIcon({
+                        html: `<div style="background:${getColor(spot.category)}; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid white; font-size:1.5rem; box-shadow:0 8px 15px #00000080;">${spot.icon}</div>`,
+                        className: '',
+                        iconSize: [42, 42],
+                        popupAnchor: [0, -21]
+                    })
+                }).bindPopup(`
+                    <div style="text-align:center; min-width:180px;">
+                        <strong style="font-size:1.2rem; color:#a78bfa;">${spot.name}</strong><br>
+                        <img src="${spot.image}" style="width:100%; height:100px; object-fit:cover; border-radius:12px; margin:8px 0; border:2px solid #a78bfa;" />
+                        <p style="margin:5px 0; font-size:0.9rem;">${spot.desc}</p>
+                    </div>
+                `, { className: 'custom-popup' });
+
+                marker.on('click', function () {
+                    currentDestination = { lat: spot.lat, lng: spot.lng, name: spot.name };
+                    drawRouteTo(spot.lat, spot.lng, spot.name);
+                });
+
+                marker.addTo(map);
+            });
+
+            // click on spot card triggers same route
+            window.selectSpot = function (lat, lng, name) {
+                currentDestination = { lat, lng, name };
+                drawRouteTo(lat, lng, name);
+                map.setView([lat, lng], 14);
+            };
+        }
+
+        // color helper
+        function getColor(cat) {
+            const colors = { memorial: '#ef4444', art: '#f59e0b', museum: '#3b82f6', market: '#10b981', cultural: '#a78bfa', leisure: '#22c55e' };
+            return colors[cat] || '#a78bfa';
+        }
+
+        // ---------- DRAW ROUTE FROM USER TO DESTINATION (OSRM) ----------
+        function drawRouteTo(destLat, destLng, destName) {
+            if (!map) return;
+
+            // remove previous route
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
+
+            routingControl = L.Routing.control({
+                waypoints: [
+                    L.latLng(userLat, userLng),
+                    L.latLng(destLat, destLng)
+                ],
+                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+                lineOptions: { styles: [{ color: '#a78bfa', weight: 6, opacity: 0.9 }] },
+                show: false,          // hide instructions
+                addWaypoints: false,
+                draggableWaypoints: false,
+                createMarker: function () { return null; } // use our own markers
+            }).addTo(map);
+
+            routingControl.on('routesfound', function (e) {
+                const route = e.routes[0];
+                const distKm = (route.summary.totalDistance / 1000).toFixed(1);
+                const durationMin = Math.round(route.summary.totalTime / 60);
+                document.getElementById('routeDist').innerHTML = `<i class="fas fa-route"></i> ${distKm} km`;
+                document.getElementById('walkTime').innerHTML = `<i class="fas fa-person-walking"></i> walk: ${Math.round(distKm * 12)} min`; // rough estimate
+                document.getElementById('driveTime').innerHTML = `<i class="fas fa-car"></i> drive: ${durationMin} min`;
+                const taxiEst = Math.round(distKm * 500).toLocaleString();
+                document.getElementById('taxiFare').innerHTML = `<i class="fas fa-taxi"></i> ~${taxiEst} RWF`;
+            });
+        }
+
+        // ---------- DETECT USER LOCATION (real GPS) ----------
+        window.detectUserLocation = function () {
+            const locText = document.getElementById('locationText');
+            const locIcon = document.getElementById('locIcon');
+            locText.innerHTML = 'Locating… <i class="fas fa-spinner fa-spin"></i>';
+
+            if (!navigator.geolocation) {
+                locText.innerText = 'Geolocation not supported';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+                    locIcon.className = 'fas fa-check-circle';
+                    locIcon.style.color = '#4ade80';
+                    // reverse geocode (suburb)
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLat}&lon=${userLng}&zoom=16`, {
+                        headers: { 'Accept-Language': 'en' }
+                    })
+                        .then(r => r.json())
+                        .then(d => {
+                            const sub = d.address?.suburb || d.address?.neighbourhood || '';
+                            const city = d.address?.city || 'Kigali';
+                            locText.innerHTML = sub ? `${sub}, ${city}` : city;
+                        })
+                        .catch(() => locText.innerHTML = `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`);
+
+                    // update map center and user marker (remove old)
+                    if (map) {
+                        map.eachLayer(layer => {
+                            if (layer instanceof L.Marker && layer.options.title === 'You are here (default)') {
+                                map.removeLayer(layer);
+                            }
+                        });
+                        L.marker([userLat, userLng], {
+                            icon: L.divIcon({
+                                html: '<div style="background:#3b82f6; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 20px #3b82f6;"></div>',
+                                iconSize: [20, 20]
+                            }),
+                            title: 'You'
+                        }).addTo(map);
+                        map.setView([userLat, userLng], 14);
+                    }
+
+                    // if a destination was previously selected, redraw route
+                    if (currentDestination) {
+                        drawRouteTo(currentDestination.lat, currentDestination.lng, currentDestination.name);
+                    }
+                },
+                (err) => {
+                    locText.innerHTML = 'Kigali (default)';
+                    console.warn('Geolocation error, using default', err);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        };
+
+        // ---------- RENDER SPOT CARDS (with images) ----------
+        function renderCards() {
+            const grid = document.getElementById('spotsGrid');
+            grid.innerHTML = '';
+            touristSpots.forEach(spot => {
+                const card = document.createElement('div');
+                card.className = 'spot-card';
+                card.onclick = () => window.selectSpot(spot.lat, spot.lng, spot.name);
+                card.innerHTML = `
+                    <img class="spot-image" src="${spot.image}" alt="${spot.name}" loading="lazy">
+                    <div class="spot-content">
+                        <div class="spot-icon">${spot.icon}</div>
+                        <div class="spot-name">${spot.name}</div>
+                        <div class="spot-desc">${spot.desc}</div>
+                        <div class="spot-meta">
+                            <span><i class="fas fa-map-pin"></i> tourist spot</span>
+                            <span><i class="fas fa-route"></i> route ready</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ---------- INIT ON PAGE LOAD ----------
+        window.onload = function () {
+            renderCards();
+            initMap();
+            // auto‑detect location after map loads
+            setTimeout(() => detectUserLocation(), 500);
+        };
+    </script>
+
+    <!-- hide routing instructions -->
+    <style>
+        .leaflet-routing-container {
+            display: none;
+        }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border: 2px solid #a78bfa;
+            border-radius: 24px;
+            color: white;
+        }
+
+        .custom-popup .leaflet-popup-tip {
+            background: #a78bfa;
+        }
+    </style>
+</body>
+
+</html>
